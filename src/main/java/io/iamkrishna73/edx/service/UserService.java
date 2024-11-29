@@ -1,6 +1,6 @@
 package io.iamkrishna73.edx.service;
 
-import io.iamkrishna73.edx.constant.EmailConstant;
+import io.iamkrishna73.edx.constant.AppConstant;
 import io.iamkrishna73.edx.constant.LoggingConstant;
 import io.iamkrishna73.edx.dtos.LoginFormDto;
 import io.iamkrishna73.edx.dtos.SignUpDto;
@@ -17,10 +17,10 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class UserService implements IUserService {
-    @Value("${frontend.url.unlockAccount}")
-    private String unlockAccountUrl;
     private final UserDetailsRepository userDetailsRepository;
     private final EmailUtils emailUtils;
+    @Value("${frontend.url.unlockAccount}")
+    private String unlockAccountUrl;
 
     public UserService(UserDetailsRepository userDetailsRepository, EmailUtils emailUtils) {
         this.userDetailsRepository = userDetailsRepository;
@@ -29,34 +29,47 @@ public class UserService implements IUserService {
 
     @Override
     public String login(LoginFormDto loginFormDto) {
-        return null;
+        var methodName = "login:UserService";
+        log.info(LoggingConstant.START_METHOD_LOG, methodName, loginFormDto.getEmail());
+        UserDetailsEntity userDetails = userDetailsRepository.findByEmail(loginFormDto.getEmail()).orElseThrow(() -> {
+                    log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "User not found");
+                    throw new ResourceNotFoundException("User not found");
+                }
+        );
+        if(userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_LOCKED_STATUS)) {
+            return AppConstant.ACCOUNT_FAILURE_STATUS;
+        }
+        if (userDetails.getEmail().equals(loginFormDto.getEmail()) && userDetails.getPassword().equals(loginFormDto.getPassword())) {
+            return AppConstant.ACCOUNT_SUCCESS_STATUS;
+        }
+        return AppConstant.ACCOUNT_FAILURE_STATUS;
     }
 
     @Override
     public void signUp(SignUpDto signUpDto) {
         var methodName = "UserService:signUp";
         UserDetailsEntity userDetails = new UserDetailsEntity();
-        userDetails.setUsername(signUpDto.getName());
         if (userDetailsRepository.existsByEmail(signUpDto.getEmail())) {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, " Email already exists");
             throw new ResourceNotFoundException("Email already exists in database!");
-
         }
+        userDetails.setUsername(signUpDto.getName());
         userDetails.setEmail(signUpDto.getEmail());
         userDetails.setPhoneNumber(signUpDto.getPhoneNumber());
 
         String tempPassword = PasswordUtils.generateRandomPassword();
         userDetails.setPassword(tempPassword);
 
-        userDetails.setAccountStatus("LOCKED");
+        userDetails.setAccountStatus(AppConstant.ACCOUNT_LOCKED_STATUS);
 
         userDetailsRepository.save(userDetails);
 
         String to = signUpDto.getEmail();
-          StringBuilder body = generateEmailBody(tempPassword, signUpDto.getEmail());
+        StringBuilder body = generateEmailBody(tempPassword, signUpDto.getEmail());
 
 
-        emailUtils.sendEmail(to, EmailConstant.subject, body.toString());
+        emailUtils.sendEmail(to, AppConstant.subject, body.toString());
+        log.info(LoggingConstant.END_METHOD_LOG, methodName);
     }
 
     private StringBuilder generateEmailBody(String tempPassword, String email) {
@@ -77,12 +90,13 @@ public class UserService implements IUserService {
     public void unlockAccount(UnlockFormDto unlockFormDto) {
         var methodName = "UserService:unlockAccount";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, " Unlocking account" + unlockFormDto.getEmail());
-        System.out.println("Hello");
-        System.out.println(unlockFormDto);
 
-        UserDetailsEntity userDetails = userDetailsRepository.findByEmail(unlockFormDto.getEmail());
-        System.out.println(userDetails);
-        if (userDetails.getAccountStatus().equals("UNLOCKED"))  {
+        UserDetailsEntity userDetails = userDetailsRepository.findByEmail(unlockFormDto.getEmail()).orElseThrow(() -> {
+            log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "Cannot Unlock account because user does not exists");
+            throw new ResourceNotFoundException("Cannot Unlock account because user does not exists");
+        });
+       //  System.out.println(userDetails);
+        if (userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_UNLOCKED_STATUS)) {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "Account is already unlocked");
             throw new ResourceNotFoundException("Account already unlocked!");
 
@@ -96,7 +110,7 @@ public class UserService implements IUserService {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "Password confirmation does not match");
             throw new ResourceNotFoundException("Password and confirm password do not match!");
         }
-        userDetails.setAccountStatus("UNLOCKED");
+        userDetails.setAccountStatus(AppConstant.ACCOUNT_UNLOCKED_STATUS);
         userDetails.setPassword(unlockFormDto.getPassword());
         log.info(LoggingConstant.END_METHOD_LOG, methodName);
         userDetailsRepository.save(userDetails);

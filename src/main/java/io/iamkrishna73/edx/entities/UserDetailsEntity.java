@@ -1,7 +1,6 @@
 package io.iamkrishna73.edx.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.Data;
 
 import java.util.List;
