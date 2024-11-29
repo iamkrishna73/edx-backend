@@ -1,16 +1,16 @@
 package io.iamkrishna73.edx.controller;
 
-import io.iamkrishna73.edx.constant.AppConstant;
 import io.iamkrishna73.edx.dtos.LoginFormDto;
 import io.iamkrishna73.edx.dtos.SignUpDto;
 import io.iamkrishna73.edx.dtos.UnlockFormDto;
+import io.iamkrishna73.edx.dtos.response.LoginResponse;
 import io.iamkrishna73.edx.service.IUserService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Objects;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/edx/auth")
@@ -24,14 +24,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginFormDto loginFormDto) {
-        String response = userService.login(loginFormDto);
-       // var data = response.contains(AppConstant.ACCOUNT_SUCCESS_STATUS);
-        // System.out.println(data);
-        if(!Objects.equals(response, AppConstant.ACCOUNT_SUCCESS_STATUS)) {
-            System.out.println("hello jjs");
-            return new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
-        }
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        LoginResponse response = userService.login(loginFormDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/register")

@@ -5,6 +5,7 @@ import io.iamkrishna73.edx.constant.LoggingConstant;
 import io.iamkrishna73.edx.dtos.LoginFormDto;
 import io.iamkrishna73.edx.dtos.SignUpDto;
 import io.iamkrishna73.edx.dtos.UnlockFormDto;
+import io.iamkrishna73.edx.dtos.response.LoginResponse;
 import io.iamkrishna73.edx.entities.UserDetailsEntity;
 import io.iamkrishna73.edx.exception.ResourceNotFoundException;
 import io.iamkrishna73.edx.repos.UserDetailsRepository;
@@ -28,7 +29,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String login(LoginFormDto loginFormDto) {
+    public LoginResponse login(LoginFormDto loginFormDto) {
         var methodName = "login:UserService";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, loginFormDto.getEmail());
         UserDetailsEntity userDetails = userDetailsRepository.findByEmail(loginFormDto.getEmail()).orElseThrow(() -> {
@@ -37,12 +38,16 @@ public class UserService implements IUserService {
                 }
         );
         if(userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_LOCKED_STATUS)) {
-            return AppConstant.ACCOUNT_FAILURE_STATUS;
+            log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "User is locked");
+            throw new ResourceNotFoundException("Account is locked");
+            //return AppConstant.ACCOUNT_FAILURE_STATUS;
         }
+        LoginResponse loginResponse = new LoginResponse();
         if (userDetails.getEmail().equals(loginFormDto.getEmail()) && userDetails.getPassword().equals(loginFormDto.getPassword())) {
-            return AppConstant.ACCOUNT_SUCCESS_STATUS;
+            loginResponse.setUsername(userDetails.getUsername());
+            loginResponse.setEmail(userDetails.getEmail());
         }
-        return AppConstant.ACCOUNT_FAILURE_STATUS;
+        return loginResponse;
     }
 
     @Override
