@@ -9,5 +9,5 @@ public interface IUserService {
     LoginResponse login(LoginFormDto loginFormDto);
     void signUp(SignUpDto signUpFromDto);
     void unlockAccount(UnlockFormDto formDto);
-    String forgetPassword(String email);
+    void forgetPassword(String email);
 }
