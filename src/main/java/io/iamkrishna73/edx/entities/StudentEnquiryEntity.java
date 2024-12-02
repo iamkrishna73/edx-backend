@@ -11,16 +11,16 @@ import java.time.LocalDate;
 @Entity
 @Table(name="student_enquiries")
 @Data
-public class StudentEnquriyEntity {
+public class StudentEnquiryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer enquiryId;
 
-    private Integer studentEnquiryId;
+  //  private Integer studentEnquiryId;
 
     private String studentName;
 
-    private Integer studentPhone;
+    private Long studentPhone;
 
     private String classMode;
 
@@ -35,6 +35,6 @@ public class StudentEnquriyEntity {
     private LocalDate lastUpdated;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
-    @JoinColumn(name="user_id", referencedColumnName = "user_id")
+    @JoinColumn(name="user_id", referencedColumnName = "id")
     private UserDetailsEntity userDetails;
 }

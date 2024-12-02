@@ -11,8 +11,8 @@ import java.util.List;
 public class UserDetailsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Integer userId;
+    @Column(name = "id")
+    private Integer Id;
     private String username;
 
    // @Email(message = "Invalid email")
@@ -21,5 +21,5 @@ public class UserDetailsEntity {
     private Long phoneNumber;
     private String accountStatus;
     @OneToMany(mappedBy = "userDetails", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<StudentEnquriyEntity> enquiries;
+    private List<StudentEnquiryEntity> enquiries;
 }

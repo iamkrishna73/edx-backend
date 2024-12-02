@@ -11,9 +11,7 @@ import io.iamkrishna73.edx.exception.ResourceNotFoundException;
 import io.iamkrishna73.edx.repos.UserDetailsRepository;
 import io.iamkrishna73.edx.utils.EmailUtils;
 import io.iamkrishna73.edx.utils.PasswordUtils;
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,13 +39,14 @@ public class UserService implements IUserService {
                     throw new ResourceNotFoundException("User not found");
                 }
         );
-        if(userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_LOCKED_STATUS)) {
+        if (userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_LOCKED_STATUS)) {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "User is locked");
             throw new ResourceNotFoundException("Account is locked");
             //return AppConstant.ACCOUNT_FAILURE_STATUS;
         }
         LoginResponse loginResponse = new LoginResponse();
         if (userDetails.getEmail().equals(loginFormDto.getEmail()) && userDetails.getPassword().equals(loginFormDto.getPassword())) {
+           loginResponse.setUserId(userDetails.getId());
             loginResponse.setUsername(userDetails.getUsername());
             loginResponse.setEmail(userDetails.getEmail());
         }
@@ -83,7 +82,6 @@ public class UserService implements IUserService {
     }
 
 
-
     @Override
     public void unlockAccount(UnlockFormDto unlockFormDto) {
         var methodName = "UserService:unlockAccount";
@@ -93,7 +91,7 @@ public class UserService implements IUserService {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "Cannot Unlock account because user does not exists");
             throw new ResourceNotFoundException("Cannot Unlock account because user does not exists");
         });
-       //  System.out.println(userDetails);
+        //  System.out.println(userDetails);
         if (userDetails.getAccountStatus().equals(AppConstant.ACCOUNT_UNLOCKED_STATUS)) {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "Account is already unlocked");
             throw new ResourceNotFoundException("Account already unlocked!");
@@ -117,7 +115,7 @@ public class UserService implements IUserService {
     public void forgetPassword(String email) {
         var methodName = "UserService:forgetPassword";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, " Forgetting password");
-        UserDetailsEntity userDetails = userDetailsRepository.findByEmail(email).orElseThrow(()-> {
+        UserDetailsEntity userDetails = userDetailsRepository.findByEmail(email).orElseThrow(() -> {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "User not found");
             throw new ResourceNotFoundException("User is not registered provided email address");
         });
