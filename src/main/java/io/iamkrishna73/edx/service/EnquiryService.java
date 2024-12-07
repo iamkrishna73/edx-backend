@@ -3,11 +3,13 @@ package io.iamkrishna73.edx.service;
 import io.iamkrishna73.edx.constant.LoggingConstant;
 import io.iamkrishna73.edx.dtos.DashboardResponse;
 import io.iamkrishna73.edx.dtos.EnquiryFormDto;
-import io.iamkrishna73.edx.dtos.EnquirySearchCriteriaDto;
+import io.iamkrishna73.edx.dtos.EnquiryDto;
+import io.iamkrishna73.edx.dtos.response.EnquiryRequest;
 import io.iamkrishna73.edx.entities.CourseEntity;
 import io.iamkrishna73.edx.entities.StatusEntity;
 import io.iamkrishna73.edx.entities.StudentEnquiryEntity;
 import io.iamkrishna73.edx.entities.UserDetailsEntity;
+import io.iamkrishna73.edx.exception.ResourceNotFoundException;
 import io.iamkrishna73.edx.repos.CourseRepository;
 import io.iamkrishna73.edx.repos.StatusRepository;
 import io.iamkrishna73.edx.repos.StudentEnquiryRepository;
@@ -16,13 +18,13 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class EnquiryService implements IEnquiryService {
-    // private final StudentEnquiryRepository studentEnquiryRepository;
     private final UserDetailsRepository userDetailsRepository;
     private final CourseRepository courseRepository;
     private final StatusRepository statusRepository;
@@ -59,6 +61,7 @@ public class EnquiryService implements IEnquiryService {
             return new EntityNotFoundException("User not found");
         });
         List<StudentEnquiryEntity> enquiries = userDetails.getEnquiries();
+        System.out.println(enquiries);
 
         Integer totalEnquiriesCount = enquiries.size();
         Integer enrolledCount = enquiries.stream().filter(enquiry -> enquiry.getEnquiryStatus().equals("Enrolled")).toList().size();
@@ -74,7 +77,7 @@ public class EnquiryService implements IEnquiryService {
     }
 
     @Override
-    public void addEnquiry(Integer userId, EnquiryFormDto enquiryFormDto) {
+    public void addEnquiry(Integer userId, EnquiryRequest enquiryRequest) {
         var methodName = "EnquiryService:addEnquiry";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, userId);
         StudentEnquiryEntity studentEntity = new StudentEnquiryEntity();
@@ -83,23 +86,69 @@ public class EnquiryService implements IEnquiryService {
             log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, userId);
             return new EntityNotFoundException("User not found");
         });
-        studentEntity.setStudentName(enquiryFormDto.getStudentName());
-        studentEntity.setStudentPhone(enquiryFormDto.getContactNumber());
-        studentEntity.setClassMode(enquiryFormDto.getClassMode());
-        studentEntity.setCourseName(enquiryFormDto.getCourse());
-        studentEntity.setEnquiryStatus(enquiryFormDto.getEnquiryStatus());
+        studentEntity.setStudentName(enquiryRequest.getStudentName());
+        studentEntity.setStudentPhone(enquiryRequest.getContactNumber());
+        studentEntity.setClassMode(enquiryRequest.getClassMode());
+        studentEntity.setCourseName(enquiryRequest.getCourse());
+        studentEntity.setEnquiryStatus(enquiryRequest.getEnquiryStatus());
         studentEntity.setUserDetails(userDetails);
         studentEnquiryRepository.save(studentEntity);
         log.info(LoggingConstant.END_METHOD_LOG, methodName);
     }
 
     @Override
-    public List<EnquiryFormDto> getEnquires(Integer userId, EnquirySearchCriteriaDto criteriaDto) {
-        return null;
+    public List<EnquiryDto> getAllEnquires(Integer userId) {
+        var methodName = "EnquiryService:getEnquires";
+        log.info(LoggingConstant.START_METHOD_LOG, methodName, userId);
+        List<EnquiryDto> enquiriesResponses = new ArrayList<>();
+
+        List<StudentEnquiryEntity> studentEnquiry = studentEnquiryRepository.findAllByUserId(userId)
+                .orElseThrow(() -> {
+                    log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, userId);
+                    return new ResourceNotFoundException("No enquiries found for user with ID: " + userId);
+                });
+
+        System.out.println(studentEnquiry);
+        for (StudentEnquiryEntity studentEnquiryEntity : studentEnquiry) {
+            EnquiryDto enquiryResponse = getEnquiryResponse(studentEnquiryEntity);
+            enquiriesResponses.add(enquiryResponse);
+        }
+
+        log.info(LoggingConstant.END_METHOD_LOG, methodName);
+        System.out.println(enquiriesResponses);
+        return enquiriesResponses;
     }
 
-//    @Override
-//    public EnquiryFormDto getEnquiry(Integer enquiryId) {
-//        return null;
-//    }
+    @Override
+    public void updateEnquiry(Integer userId, Integer enquiryId, EnquiryRequest enquiryDto) {
+        var methodName = "EnquiryService:updateEnquiry";
+        log.info(LoggingConstant.START_METHOD_LOG, methodName, userId, enquiryId);
+        StudentEnquiryEntity studentEnquiry = studentEnquiryRepository.findByEnquiryIdAndUserDetailsId(enquiryId, userId).orElseThrow(()-> {
+            log.error(LoggingConstant.ERROR_METHOD_LOG, methodName, "No enquiries found for user with ID: "+ " " + userId);
+            return new ResourceNotFoundException("No enquiries found for user with ID: "+ enquiryId + " " + userId);
+        });
+
+        System.out.println(studentEnquiry);
+        studentEnquiry.setStudentName(enquiryDto.getStudentName());
+        studentEnquiry.setStudentPhone(enquiryDto.getContactNumber());
+        studentEnquiry.setClassMode(enquiryDto.getClassMode());
+        studentEnquiry.setCourseName(enquiryDto.getCourse());
+        studentEnquiry.setEnquiryStatus(enquiryDto.getEnquiryStatus());
+        System.out.println(studentEnquiry);
+        studentEnquiryRepository.save(studentEnquiry);
+        log.info(LoggingConstant.END_METHOD_LOG, methodName);
+       // System.out.println(studentEnquiry);// studentEnquiry
+    }
+
+    private static EnquiryDto getEnquiryResponse(StudentEnquiryEntity studentEnquiryEntity) {
+        EnquiryDto enquiryResponse = new EnquiryDto();
+        enquiryResponse.setEnquiryId(studentEnquiryEntity.getEnquiryId());
+        enquiryResponse.setStudentName(studentEnquiryEntity.getStudentName());
+        enquiryResponse.setCourse(studentEnquiryEntity.getCourseName());
+        enquiryResponse.setContactNumber(studentEnquiryEntity.getStudentPhone());
+        enquiryResponse.setClassMode(studentEnquiryEntity.getClassMode());
+        enquiryResponse.setEnquiryStatus(studentEnquiryEntity.getEnquiryStatus());
+        enquiryResponse.setEnquiryDate(studentEnquiryEntity.getDateCreated());
+        return enquiryResponse;
+    }
 }

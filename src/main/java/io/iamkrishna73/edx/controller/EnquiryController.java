@@ -2,7 +2,8 @@ package io.iamkrishna73.edx.controller;
 
 import io.iamkrishna73.edx.constant.LoggingConstant;
 import io.iamkrishna73.edx.dtos.DashboardResponse;
-import io.iamkrishna73.edx.dtos.EnquiryFormDto;
+import io.iamkrishna73.edx.dtos.EnquiryDto;
+import io.iamkrishna73.edx.dtos.response.EnquiryRequest;
 import io.iamkrishna73.edx.entities.CourseEntity;
 import io.iamkrishna73.edx.entities.StatusEntity;
 import io.iamkrishna73.edx.service.IEnquiryService;
@@ -23,7 +24,7 @@ public class EnquiryController {
         this.enquiryService = enquiryService;
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("dashboard/{userId}")
     public ResponseEntity<DashboardResponse> getDashboard(@PathVariable Integer userId) {
         var methodName = "EnquiryController:getDashboard";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, userId);
@@ -33,11 +34,11 @@ public class EnquiryController {
     }
 
     @PostMapping("/{userId}")
-    public ResponseEntity<?> addEnquiry(@PathVariable Integer userId, @RequestBody EnquiryFormDto enquiryFormDto) {
+    public ResponseEntity<?> addEnquiry(@PathVariable Integer userId, @RequestBody EnquiryRequest enquiryRequest) {
         var methodName = "EnquiryController:addEnquiry";
         log.info(LoggingConstant.START_METHOD_LOG, methodName, userId);
-        System.out.println(enquiryFormDto);
-        enquiryService.addEnquiry(userId,enquiryFormDto);
+        System.out.println(enquiryRequest);
+        enquiryService.addEnquiry(userId,enquiryRequest);
         return new ResponseEntity<>("New Student Enquiry save successfully", HttpStatus.CREATED);
     }
 
@@ -56,5 +57,30 @@ public class EnquiryController {
         List<StatusEntity> statusList = enquiryService.getEnquiryStatus();
         return new ResponseEntity<>(statusList,HttpStatus.OK);
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getAllEnquiryByUserId(@PathVariable Integer userId) {
+        var methodName = "EnquiryController:getEnquiryById";
+        log.info(LoggingConstant.START_METHOD_LOG, methodName);
+        List<EnquiryDto> searchList = enquiryService.getAllEnquires(userId);
+
+        log.info(LoggingConstant.END_METHOD_LOG, methodName);
+        return new ResponseEntity<>(searchList,HttpStatus.OK);
+    }
+
+    @PutMapping("/{userId}/{enquiryId}")
+    public ResponseEntity<?> updateEnquiry(@PathVariable Integer userId, @PathVariable Integer enquiryId, @RequestBody EnquiryRequest enquiryDto) {
+        var methodName = "EnquiryController:updateEnquiry";
+        log.info(LoggingConstant.START_METHOD_LOG, methodName, userId);
+
+        // Perform the update logic
+        enquiryService.updateEnquiry(userId, enquiryId, enquiryDto);
+
+        log.info(LoggingConstant.END_METHOD_LOG, methodName);
+
+        // Return success response with appropriate status code
+        return new ResponseEntity<>("Enquiry updated successfully", HttpStatus.OK); // Changed from CREATED to OK
+    }
+
 }
 
