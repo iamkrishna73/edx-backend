@@ -24,16 +24,16 @@ public class DataLoader implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         courseRepository.deleteAll();
         CourseEntity c1 = new CourseEntity();
-        c1.setCourseName("Java");
+        c1.setCourseName("Construction Material");
 
         CourseEntity c2 = new CourseEntity();
-        c2.setCourseName("Python");
+        c2.setCourseName("Electrical Goods");
 
         CourseEntity c3 = new CourseEntity();
-        c3.setCourseName("DevOps");
+        c3.setCourseName("Medicine, Medical Care");
 
         CourseEntity c4 = new CourseEntity();
-        c4.setCourseName("AWS");
+        c4.setCourseName("Clothing & Garments");
 
         courseRepository.saveAll(Arrays.asList(c1,c2,c3,c4));
 
