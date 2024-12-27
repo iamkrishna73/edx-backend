@@ -2,25 +2,23 @@ package io.iamkrishna73.edx.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
-
-
 @Entity
-@Table(name="student_enquiries")
+@Table(name = "student_enquiries")
 @Data
-public class StudentEnquriyEntity {
+public class StudentEnquiryEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer enquiryId;
 
-    private Integer studentEnquiryId;
-
     private String studentName;
 
-    private Integer studentPhone;
+    private Long studentPhone;
 
     private String classMode;
 
@@ -34,7 +32,9 @@ public class StudentEnquriyEntity {
     @UpdateTimestamp
     private LocalDate lastUpdated;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
-    @JoinColumn(name="user_id", referencedColumnName = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @ToString.Exclude
     private UserDetailsEntity userDetails;
 }
+
